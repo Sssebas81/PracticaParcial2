@@ -6,6 +6,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { GamesModule } from './games/games.module';
+import { PermissionModule } from './auth/permission/permission.module';
+import { RoleModule } from './auth/role/role.module';
+import { RolePermissionModule } from './auth/role-permission/role-permission.module';
+import { UserModule } from './auth/user/user.module';
 
 type SupportedDbTypes = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mongodb' | 'oracle';
 @Module({
@@ -27,6 +31,10 @@ type SupportedDbTypes = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mongodb' 
             }),
         }),
         GamesModule,
+        PermissionModule,
+        RoleModule,
+        RolePermissionModule,
+        UserModule,
     ],
     controllers: [AppController],
     providers: [AppService],
