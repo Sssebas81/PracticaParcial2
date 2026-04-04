@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Role } from '../entities/role.entity';
+import { Role } from '@/auth/entities/role.entity';
 
-import { UpdateRoleDto } from './dto/update-role.dto';
 import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Injectable()
 export class RoleService {
@@ -14,33 +14,30 @@ export class RoleService {
         private readonly roleRepository: Repository<Role>,
     ) {}
 
-    async create(createRoleDto: CreateRoleDto): Promise<Role> {
-        const newRole = this.roleRepository.create(createRoleDto);
-        return await this.roleRepository.save(newRole);
+    create(dto: CreateRoleDto) {
+        return this.roleRepository.save(this.roleRepository.create(dto));
     }
 
-    async findAll(): Promise<Role[]> {
-        return await this.roleRepository.find();
+    findAll() {
+        return this.roleRepository.find();
     }
 
-    async findOne(id: number): Promise<Role | null> {
-        return await this.roleRepository.findOneBy({ id });
-    }
-
-    async update(id: number, updateRoleDto: UpdateRoleDto): Promise<Role | null> {
-        await this.roleRepository.update(id, updateRoleDto);
-        return await this.roleRepository.findOneBy({ id });
-    }
-
-    async remove(id: number): Promise<{ id: number } | null> {
-        const result = await this.roleRepository.delete(id);
-        if (result.affected) {
-            return { id };
+    async findById(id: number) {
+        const role = await this.roleRepository.findOne({ where: { id } });
+        if (!role) {
+            throw new NotFoundException(`Role with id ${id} not found`);
         }
-        return null;
+        return role;
     }
 
-    async findByName(name: string): Promise<Role | null> {
-        return await this.roleRepository.findOneBy({ name });
+    async update(id: number, dto: UpdateRoleDto) {
+        await this.findById(id);
+        await this.roleRepository.update(id, dto);
+        return this.findById(id);
+    }
+
+    async remove(id: number) {
+        await this.findById(id);
+        return this.roleRepository.delete(id);
     }
 }

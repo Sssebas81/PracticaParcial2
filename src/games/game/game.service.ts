@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -17,8 +17,13 @@ export class GameService {
         private readonly userService: UserService,
     ) {}
 
-    create(_createGameDto: CreateGameDto) {
-        return 'This action adds a new game';
+    async create(createGameDto: CreateGameDto) {
+        const user = await this.userService.findById(createGameDto.createdById);
+        const game = this.gameRepository.create({
+            ...createGameDto,
+            createdBy: user,
+        });
+        return this.gameRepository.save(game);
     }
 
     async findAll() {
@@ -27,15 +32,25 @@ export class GameService {
         });
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} game`;
+    async findById(id: number) {
+        const game = await this.gameRepository.findOne({
+            where: { id },
+            relations: ['createdBy'],
+        });
+        if (!game) {
+            throw new NotFoundException(`Game with id ${id} not found`);
+        }
+        return game;
     }
 
-    update(id: number, _updateGameDto: UpdateGameDto) {
-        return `This action updates a #${id} game`;
+    async update(id: number, updateGameDto: UpdateGameDto) {
+        await this.findById(id);
+        await this.gameRepository.update(id, updateGameDto);
+        return this.findById(id);
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} game`;
+    async remove(id: number) {
+        await this.findById(id);
+        return this.gameRepository.delete(id);
     }
 }

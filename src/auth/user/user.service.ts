@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { User } from '../entities/user.entity';
-import { RoleService } from '../role/role.service';
+import { User } from '@/auth/entities/user.entity';
+import { Role } from '@/auth/entities/role.entity';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -13,115 +13,59 @@ export class UserService {
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
-        private roleService: RoleService,
+        @InjectRepository(Role)
+        private readonly roleRepository: Repository<Role>,
     ) {}
 
-    async create(createUserDto: CreateUserDto) {
-        const role = await this.roleService.findByName(createUserDto.roleName);
+    async create(dto: CreateUserDto) {
+        const role = await this.roleRepository.findOne({ where: { name: dto.roleName } });
         if (!role) {
-            throw new Error('Role not found');
+            throw new NotFoundException(`Role ${dto.roleName} not found`);
         }
 
-        const newUser = this.userRepository.create({
-            ...createUserDto,
+        const user = this.userRepository.create({
+            username: dto.username,
+            email: dto.email,
+            passwordHash: dto.passwordHash,
+            bio: dto.bio,
             role,
         });
-        return await this.userRepository.save(newUser);
+
+        return this.userRepository.save(user);
     }
 
     findAll() {
-        return this.userRepository.find();
+        return this.userRepository.find({ relations: ['role'] });
     }
 
-    findOne(id: number) {
-        return this.userRepository.findOne({ where: { id } });
+    async findById(id: number) {
+        const user = await this.userRepository.findOne({
+            where: { id },
+            relations: ['role'],
+        });
+        if (!user) {
+            throw new NotFoundException(`User with id ${id} not found`);
+        }
+        return user;
     }
-    // /**
-    //  * Find one user with their role
-    //  */
-    // findOne(id: number) {
-    //     return this.userRepository.findOne({
-    //         where: { id },
-    //         relations: ['role'],
-    //     });
-    // }
 
-    // /**
-    //  * Find user with role and permissions
-    //  */
-    // async findOneWithPermissions(id: number) {
-    //     return await this.userRepository.findOne({
-    //         where: { id },
-    //         relations: ['role', 'role.permissions'],
-    //     });
-    // }
+    async update(id: number, dto: UpdateUserDto) {
+        const user = await this.findById(id);
 
-    // /**
-    //  * Find all users with their roles and permissions
-    //  */
-    // async findAllWithPermissions() {
-    //     return await this.userRepository.find({
-    //         relations: ['role', 'role.permissions'],
-    //         order: { createdAt: 'DESC' },
-    //     });
-    // }
+        if (dto.roleName) {
+            const role = await this.roleRepository.findOne({ where: { name: dto.roleName } });
+            if (!role) {
+                throw new NotFoundException(`Role ${dto.roleName} not found`);
+            }
+            user.role = role;
+        }
 
-    async update(id: number, updateUserDto: UpdateUserDto) {
-        await this.userRepository.update(id, updateUserDto);
-        return this.findOne(id);
+        const updated = Object.assign(user, dto);
+        return this.userRepository.save(updated);
     }
 
     async remove(id: number) {
-        const result = await this.userRepository.delete(id);
-        if (result.affected) {
-            return { id };
-        }
-        return null;
-    }
-
-    /**
-     * Find all users with pagination and sorting
-     */
-    async findAllPage(page = 1, limit = 10, sortBy = 'createdAt', order: 'ASC' | 'DESC' = 'DESC') {
-        const [users, total] = await this.userRepository.findAndCount({
-            relations: ['role'],
-            skip: (page - 1) * limit,
-            take: limit,
-            order: { [sortBy]: order },
-        });
-
-        return {
-            data: users,
-            total,
-            page,
-            lastPage: Math.ceil(total / limit),
-        };
-    }
-
-    /**
-     * Find users by role name
-     */
-    async findByRole(roleName: string) {
-        return await this.userRepository.find({
-            where: { role: { name: roleName } },
-            relations: ['role'],
-            order: { username: 'ASC' },
-        });
-    }
-
-    /**
-     * Count total users
-     */
-    async count(): Promise<number> {
-        return await this.userRepository.count();
-    }
-
-    /**
-     * Count users by role
-     */
-    async countByRole(roleName: string): Promise<number> {
-        return await this.userRepository.count({
-            where: { role: { name: roleName } },
-        });
+        await this.findById(id);
+        return this.userRepository.delete(id);
     }
 }
