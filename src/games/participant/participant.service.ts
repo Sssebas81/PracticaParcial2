@@ -19,11 +19,11 @@ export class ParticipantService {
     ){}
 
     async findAll(){
-        await this.participantRepository.find();
+        return await this.participantRepository.find();
     }
 
     async findById(id:number){
-        await this.participantRepository.findOneBy({id});
+        return await this.participantRepository.findOneBy({id});
     }
 
     async remove(id:number){
@@ -42,7 +42,7 @@ export class ParticipantService {
         return this.participantRepository.findOneBy({id})
     }
 
-    async create (id:number, createParticipantDto: CreateParticipantDto){
+    async create(createParticipantDto: CreateParticipantDto){
         const user = await this.userService.findById(createParticipantDto.userId)
         if (!user) {
             throw new Error ('User not found')
@@ -52,5 +52,13 @@ export class ParticipantService {
         if (!session) {
             throw new Error ('Session not found')
         }
+
+        const newParticipant = this.participantRepository.create({
+            ...createParticipantDto,
+            user,
+            session
+        });
+
+        return this.participantRepository.save(newParticipant);
     }
 }
