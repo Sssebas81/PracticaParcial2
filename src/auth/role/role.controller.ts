@@ -10,9 +10,9 @@ export class RoleController {
     constructor(private readonly roleService: RoleService) {}
 
     @Post()
-    create(@Body() createRoleDto: CreateRoleDto) {
-        return this.roleService.create ? this.roleService.create(createRoleDto) : this.roleService.update(0, createRoleDto);
-    }
+        create(@Body() createRolesDto: CreateRoleDto) {
+            return this.roleService.create(createRolesDto)
+        }
 
     @Get()
     findAll() {

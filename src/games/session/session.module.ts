@@ -1,9 +1,16 @@
-import { Module } from '@nestjs/common';
+import { Module} from '@nestjs/common';
+import {TypeOrmModule} from '@nestjs/typeorm';
+import {UsersModule} from '@/auth/user/user.module';
+import {GamesModule} from '../games.module';
+import {Session} from '../entities/session.entity';
 import { SessionController } from './session.controller';
-import { SessionService } from './session.service';
+import {SessionsService} from './session.service';
 
 @Module({
-  controllers: [SessionController],
-  providers: [SessionService]
+    providers: [SessionsService],
+      imports: [TypeOrmModule.forFeature([Session]) , GamesModule, UsersModule],
+      exports: [SessionsService],
+      controllers: [SessionController],
 })
-export class SessionModule {}
+export class SessionsModule {
+}

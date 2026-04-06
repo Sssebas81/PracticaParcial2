@@ -4,12 +4,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
 import { GamesModule } from './games/games.module';
 import { PermissionModule } from './auth/permission/permission.module';
-import { RoleModule } from './auth/role/role.module';
 import { RolePermissionModule } from './auth/role-permission/role-permission.module';
-import { UserModule } from './auth/user/user.module';
+import {RolesModule} from './auth/role/role.module';
+import {UsersModule} from './auth/user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 type SupportedDbTypes = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mongodb' | 'oracle';
 @Module({
@@ -32,9 +32,9 @@ type SupportedDbTypes = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mongodb' 
         }),
         GamesModule,
         PermissionModule,
-        RoleModule,
+        RolesModule,
         RolePermissionModule,
-        UserModule,
+        UsersModule,
     ],
     controllers: [AppController],
     providers: [AppService],

@@ -1,12 +1,9 @@
 import { Module } from '@nestjs/common';
-
-import { GameModule } from './game/game.module';
 import { CommentModule } from './comment/comment.module';
-import { GameModule } from './game/game.module';
 import { ParticipantModule } from './participant/participant.module';
-import { SessionModule } from './session/session.module';
+import { SessionsModule } from './session/session.module';
 
 @Module({
-    imports: [GameModule, CommentModule, ParticipantModule, SessionModule],
+    imports: [GamesModule, CommentModule, ParticipantModule, SessionsModule],
 })
 export class GamesModule {}
