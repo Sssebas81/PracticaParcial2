@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -11,33 +11,53 @@ import { CreateRoleDto } from './dto/create-role.dto';
 export class RoleService {
     constructor(
         @InjectRepository(Role)
-        private readonly roleRepository: Repository<Role>,
+        private readonly roleRepository: Repository<Role>
     ) {}
 
-    async create(createRoleDto: CreateRoleDto): Promise<Role> {
-        const newRole = this.roleRepository.create(createRoleDto);
-        return await this.roleRepository.save(newRole);
+    findAll() {
+        return this.roleRepository.find()
     }
 
-    async findAll(): Promise<Role[]> {
-        return await this.roleRepository.find();
-    }
+    findById(id: number) {
+        const role = this.roleRepository.findOneBy({id})
 
-    async findOne(id: number): Promise<Role | null> {
-        return await this.roleRepository.findOneBy({ id });
-    }
-
-    async update(id: number, updateRoleDto: UpdateRoleDto): Promise<Role | null> {
-        await this.roleRepository.update(id, updateRoleDto);
-        return await this.roleRepository.findOneBy({ id });
-    }
-
-    async remove(id: number): Promise<{ id: number } | null> {
-        const result = await this.roleRepository.delete(id);
-        if (result.affected) {
-            return { id };
+        if (!role) {
+            throw new NotFoundException('Role not found')
         }
-        return null;
+        return role
+    }
+
+    async update (id: number, updateRoleDto: UpdateRoleDto) {
+        await this.roleRepository.update(id, updateRoleDto) 
+        return this.roleRepository.findOneBy({id})
+    }
+
+    async remove (id: number) {
+        const role = await this.findById(id)
+
+        if (!role) {
+            throw new NotFoundException('Role not found')
+        }
+
+        await this.roleRepository.delete(role)
+
+        return {id}
+    }
+
+    async create(createRoleDto: CreateRoleDto) {
+        const exists = await this.roleRepository.findOne({
+            where: {name: createRoleDto.name}
+        })
+
+        if (exists) {
+            throw new BadRequestException('Role already exists')
+        }
+
+        const newRole = this.roleRepository.create({
+            ...createRoleDto,
+        })
+
+        return await this.roleRepository.save(newRole)
     }
 
     async findByName(name: string): Promise<Role | null> {

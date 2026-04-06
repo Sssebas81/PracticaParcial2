@@ -20,7 +20,7 @@ export class RoleController {
 
     @Get(':id')
     findOne(@Param('id') id: string) {
-        return this.rolesService.findOne(+id);
+        return this.rolesService.findById(+id);
     }
 
     @Patch(':id')

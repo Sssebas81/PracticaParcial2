@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { GamesModule } from './games/games.module';
+import { SessionService } from './session/session/session.service';
 
 type SupportedDbTypes = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mongodb' | 'oracle';
 @Module({
@@ -29,6 +30,6 @@ type SupportedDbTypes = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mongodb' 
         GamesModule,
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [AppService, SessionService],
 })
 export class AppModule {}
