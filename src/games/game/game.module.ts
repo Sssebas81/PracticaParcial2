@@ -8,6 +8,8 @@ import { Game } from '../entities/game.entity';
 import { GameController } from './game.controller';
 import { GameService } from './game.service';
 
+funciona 
+
 @Module({
     controllers: [GameController],
     providers: [GameService],
