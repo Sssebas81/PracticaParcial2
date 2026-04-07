@@ -1,92 +1,43 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException} from '@nestjs/common';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Session} from '../entities/session.entity';
+import {Repository} from 'typeorm';
+import {UserService} from '@/auth/user/user.service';
+import { GameService } from '../game/game.service'; 
+import { UpdateSessionDto } from './dto/update-session.dto'; 
+import { CreateSessionDto } from './dto/create-session.dto'; 
 
-import { User } from '@/auth/entities/user.entity';
-
-import { Session, SessionStatus } from '../entities/session.entity';
-import { Game } from '../entities/game.entity';
-
-import { CreateSessionDto } from './dto/create-session.dto';
-import { UpdateSessionDto } from './dto/update-session.dto';
 
 @Injectable()
-export class SessionService {
+export class SessionsService {        
     constructor(
         @InjectRepository(Session)
         private readonly sessionRepository: Repository<Session>,
-        @InjectRepository(Game)
-        private readonly gameRepository: Repository<Game>,
-        @InjectRepository(User)
-        private readonly userRepository: Repository<User>,
+        private readonly gameService: GameService,
+        private readonly userService: UserService
     ) {}
 
-    async create(dto: CreateSessionDto) {
-        const game = await this.gameRepository.findOne({ where: { id: dto.gameId } });
-        if (!game) {
-            throw new NotFoundException(`Game with id ${dto.gameId} not found`);
-        }
-
-        const host = await this.userRepository.findOne({ where: { id: dto.hostId } });
-        if (!host) {
-            throw new NotFoundException(`User with id ${dto.hostId} not found`);
-        }
-
-        const session = this.sessionRepository.create({
-            status: dto.status as SessionStatus,
-            notes: dto.notes,
-            game,
-            host,
-        });
-        return this.sessionRepository.save(session);
-    }
-
     findAll() {
-        return this.sessionRepository.find({ relations: ['game', 'host', 'participants'] });
+        return this.sessionRepository.find();
     }
 
     async findById(id: number) {
-        const session = await this.sessionRepository.findOne({
-            where: { id },
-            relations: ['game', 'host', 'participants'],
-        });
+        const session = await this.sessionRepository.findOneBy({id})
+
         if (!session) {
-            throw new NotFoundException(`Session with id ${id} not found`);
+            throw new NotFoundException('Session not found')
         }
-        return session;
+
+        return session
     }
 
-    async update(id: number, dto: UpdateSessionDto) {
-        const session = await this.findById(id);
+    async update(id: number, updateSessionDto: UpdateSessionDto) {
+        const session = await this.sessionRepository.findOne({where: {id}})
 
-        if (dto.gameId) {
-            const game = await this.gameRepository.findOne({ where: { id: dto.gameId } });
-            if (!game) {
-                throw new NotFoundException(`Game with id ${dto.gameId} not found`);
-            }
-            session.game = game;
+        if (!session) {
+            throw new NotFoundException('Session not found')
         }
 
-        if (dto.hostId) {
-            const host = await this.userRepository.findOne({ where: { id: dto.hostId } });
-            if (!host) {
-                throw new NotFoundException(`User with id ${dto.hostId} not found`);
-            }
-            session.host = host;
-        }
-
-        if (dto.status) {
-            session.status = dto.status as SessionStatus;
-        }
-        if (dto.notes !== undefined) {
-            session.notes = dto.notes;
-        }
-
-        return this.sessionRepository.save(session);
-    }
-
-    async remove(id: number) {
-        await this.findById(id);
-        return this.sessionRepository.delete(id);
+        
     }
 }

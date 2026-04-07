@@ -1,6 +1,8 @@
+import { SessionStatus } from "@/games/entities/session.entity";
+
 export class CreateSessionDto {
-    status: string;
-    notes?: string;
-    gameId: number;
-    hostId: number;
+  gameId: number
+  hostId: number
+  status?: SessionStatus
+  notes?: string
 }

@@ -14,43 +14,67 @@ export class GameService {
     constructor(
         @InjectRepository(Game)
         private readonly gameRepository: Repository<Game>,
-        private readonly userService: UserService,
+        private readonly userService: UserService
     ) {}
 
-    async create(createGameDto: CreateGameDto) {
-        const user = await this.userService.findById(createGameDto.createdById);
-        const game = this.gameRepository.create({
-            ...createGameDto,
-            createdBy: user,
-        });
-        return this.gameRepository.save(game);
-    }
-
-    async findAll() {
-        return await this.gameRepository.find({
-            relations: ['createdBy'],
-        });
+    findAll() {
+        return this.gameRepository.find()
     }
 
     async findById(id: number) {
-        const game = await this.gameRepository.findOne({
-            where: { id },
-            relations: ['createdBy'],
-        });
+        const game = await this.gameRepository.findOneBy({id})
+
         if (!game) {
-            throw new NotFoundException(`Game with id ${id} not found`);
+            throw new NotFoundException('Game not found')
         }
-        return game;
+
+        return game
     }
 
     async update(id: number, updateGameDto: UpdateGameDto) {
-        await this.findById(id);
-        await this.gameRepository.update(id, updateGameDto);
-        return this.findById(id);
+
+        const game = await this.gameRepository.findOne({where: {id}})
+
+        if(!game) {
+            throw new NotFoundException('Game not found')
+        }
+
+        const creator = await this.userService.findById(id);
+
+        if (!creator) {
+            throw new NotFoundException('User not found');
+        }
+    
+        await this.gameRepository.update(id, updateGameDto)
+        return this.gameRepository.findOneBy({id});
+
     }
 
+
+        async create(createGameDto: CreateGameDto) {
+            const user = await this.userService.findById(createGameDto.created_By)
+
+            if (!user) {
+                throw new NotFoundException('User not found')
+            }
+
+            const newGame = this.gameRepository.create({
+                ...createGameDto,
+                createdBy: user
+            })
+
+            return await this.gameRepository.save(newGame)
+        }
+
     async remove(id: number) {
-        await this.findById(id);
-        return this.gameRepository.delete(id);
+        const game = await this.findById(id)
+
+        if (!game) {
+            throw new NotFoundException('Game not found')
+        }
+
+        await this.gameRepository.delete(id)
+
+        return {id}
     }
 }

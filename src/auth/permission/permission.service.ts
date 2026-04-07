@@ -1,43 +1,45 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-
-import { Permission } from '@/auth/entities/permission.entity';
-
-import { CreatePermissionDto } from './dto/create-permission.dto';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Permission} from '../entities/permission.entity';
+import {Repository} from 'typeorm';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
+import {CreatePermissionDto} from './dto/create-permission.dto';
 
 @Injectable()
 export class PermissionService {
     constructor(
         @InjectRepository(Permission)
-        private readonly permissionRepository: Repository<Permission>,
+        private readonly permissionRepository: Repository<Permission>
     ) {}
 
-    create(dto: CreatePermissionDto) {
-        return this.permissionRepository.save(this.permissionRepository.create(dto));
-    }
-
     findAll() {
-        return this.permissionRepository.find();
+        return this.permissionRepository.find()
     }
 
-    async findById(id: number) {
-        const permission = await this.permissionRepository.findOne({ where: { id } });
+    findById(id: number) {
+        const permission = this.permissionRepository.findOneBy({id})
+
         if (!permission) {
-            throw new NotFoundException(`Permission with id ${id} not found`);
+            throw new NotFoundException('Permission not found')
         }
-        return permission;
+
+        return permission
     }
 
-    async update(id: number, dto: UpdatePermissionDto) {
-        await this.findById(id);
-        await this.permissionRepository.update(id, dto);
-        return this.findById(id);
+    async update (id: number, updatePermissionDto: UpdatePermissionDto) {
+        await this.permissionRepository.update(id,updatePermissionDto)
+        return this.permissionRepository.findOneBy({id})
     }
 
-    async remove(id: number) {
-        await this.findById(id);
-        return this.permissionRepository.delete(id);
+    async remove (id: number) {
+        const permission = await this.findById(id)
+
+        if (!permission) {
+            throw new NotFoundException('Permission not found')
+        }
+    }
+
+    async create(createPermissionDto: CreatePermissionDto) {
+
     }
 }

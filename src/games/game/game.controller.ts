@@ -1,12 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Res, ParseIntPipe } from '@nestjs/common';
-import type { Response } from 'express';
+import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
+
 import { GameService } from './game.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 
-@Controller('game')
+@Controller('games')
 export class GameController {
     constructor(private readonly gameService: GameService) {}
+
+    @Post()
+    create(@Body() createGameDto: CreateGameDto) {
+        return this.gameService.create(createGameDto);
+    }
 
     @Get()
     findAll() {
@@ -14,26 +19,17 @@ export class GameController {
     }
 
     @Get(':id')
-    findById(@Param('id') id: string) {
+    findOne(@Param('id') id: string) {
         return this.gameService.findById(+id);
     }
 
-    @Post()
-    create(@Body() createGameDto: CreateGameDto) {
-        return this.gameService.create(createGameDto);
-    }
-
-    @Patch(':id')
+    @Put(':id')
     update(@Param('id') id: string, @Body() updateGameDto: UpdateGameDto) {
         return this.gameService.update(+id, updateGameDto);
     }
 
     @Delete(':id')
-    async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response): Promise<Response> {
-        const result = await this.gameService.remove(id);
-        if (result) {
-            return res.status(200).json(`Game with id ${id} deleted successfully`);
-        }
-        return res.status(404).json(`Game with id ${id} not found`);
+    remove(@Param('id') id: string) {
+        return this.gameService.remove(+id);
     }
 }

@@ -1,12 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Res, ParseIntPipe } from '@nestjs/common';
-import type { Response } from 'express';
+import { Body, Controller, Delete, Get, Param, Put, Post } from '@nestjs/common';
+
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-@Controller('user')
+@Controller('users')
 export class UserController {
     constructor(private readonly userService: UserService) {}
+
+    @Post()
+    create(@Body() createUserDto: CreateUserDto) {
+        return this.userService.create(createUserDto);
+    }
 
     @Get()
     findAll() {
@@ -14,26 +19,17 @@ export class UserController {
     }
 
     @Get(':id')
-    findById(@Param('id') id: string) {
+    findOne(@Param('id') id: string) {
         return this.userService.findById(+id);
     }
 
-    @Post()
-    create(@Body() createUserDto: CreateUserDto) {
-        return this.userService.create(createUserDto);
-    }
-
-    @Patch(':id')
+    @Put(':id')
     update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
         return this.userService.update(+id, updateUserDto);
     }
 
     @Delete(':id')
-    async remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response): Promise<Response> {
-        const result = await this.userService.remove(id);
-        if (result) {
-            return res.status(200).json(`User with id ${id} deleted successfully`);
-        }
-        return res.status(404).json(`User with id ${id} not found`);
+    remove(@Param('id') id: string) {
+        return this.userService.remove(+id);
     }
 }
