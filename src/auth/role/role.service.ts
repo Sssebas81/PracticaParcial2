@@ -42,9 +42,9 @@ export class RoleService {
             }
         }
 
-        Object.assign(role, updateRoleDto)
+        await this.roleRepository.update(id, updateRoleDto)
 
-        return await this.roleRepository.save(role)
+        return await this.roleRepository.findOneBy({id})
     }
 
     async remove (id: number) {

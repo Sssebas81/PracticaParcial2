@@ -48,14 +48,14 @@ export class UserService {
         if (updateUserDto.email) {
             const exists = await this.userRepository.findOne({ where: { email: updateUserDto.email}})
 
-            if (exists) {
+            if (exists && exists.id !== id) {
                 throw new BadRequestException('User with this email already exists')
             }
         }
 
-        Object.assign(user, updateUserDto)
+        await this.userRepository.update(id, updateUserDto)
 
-        return await this.userRepository.save(user)
+        return await this.userRepository.findOneBy({id})
     }
 
     async remove(id: number) {

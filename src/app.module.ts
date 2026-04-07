@@ -6,7 +6,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { GamesModule } from './games/games.module';
-import { SessionService } from './session/session/session.service';
+import { SessionsService } from './games/session/session.service'; 
+import {SessionModule} from './games/session/session.module';
 
 type SupportedDbTypes = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mongodb' | 'oracle';
 @Module({
@@ -17,7 +18,7 @@ type SupportedDbTypes = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mongodb' 
             imports: [ConfigModule],
             inject: [ConfigService],
             useFactory: (configService: ConfigService) => ({
-                type: configService.get<SupportedDbTypes>('DB_TYPE') ?? 'mysql',
+                type: configService.get<SupportedDbTypes>('DB_TYPE') ?? 'postgres',
                 host: configService.get<string>('DB_HOST') ?? 'localhost',
                 port: configService.get<number>('DB_PORT') ?? 5432,
                 username: configService.get<string>('DB_USERNAME') ?? 'root',
@@ -30,6 +31,6 @@ type SupportedDbTypes = 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mongodb' 
         GamesModule,
     ],
     controllers: [AppController],
-    providers: [AppService, SessionService],
+    providers: [AppService, SessionModule],
 })
 export class AppModule {}
