@@ -1,13 +1,29 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import type { StringValue } from 'ms';
 
-import { UserModule } from './user/user.module';
-import { RoleModule } from './role/role.module';
-import { PermissionModule } from './permission/permission.module';
-import { SessionsService } from '@/games/session/session.service'; 
-import { RolePermissionModule } from './role-permission/role-permission.module';
-import {SessionModule} from '@/games/session/session.module';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import {UserModule} from './user/user.module';
+import {RoleModule} from './role/role.module';
+import {JwtStrategy} from './jwt-strategy';
 
 @Module({
-    imports: [UserModule, RoleModule, PermissionModule, RolePermissionModule, SessionModule],
+    controllers: [AuthController],
+    providers: [AuthService, JwtStrategy],
+    imports: [
+        UserModule,
+        RoleModule,
+        JwtModule.registerAsync({
+            inject: [ConfigService],
+            useFactory: (config: ConfigService) => ({
+                secret: config.get<string>('JWT_SECRET') || 'defaultSecret',
+                signOptions: {
+                    expiresIn: config.get<StringValue | number>('JWT_EXPIRES_IN') || '1h',
+                },
+            }),
+        }),
+    ],
 })
 export class AuthModule {}

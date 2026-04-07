@@ -93,5 +93,12 @@ export class UserService {
         return await this.userRepository.save(newUser)
     }
 
+    async findByEmail(email: string){
+        return this.userRepository.findOne({
+            where: { email },
+            relations: ['role', 'role.rolePermissions', 'role.rolePermissions.permission'],
+        });
+    }
+
 
 }
