@@ -6,5 +6,5 @@ export class CreateGameDto {
     minPlayers: number;
     maxPlayers: number;
     category: GameCategory;
-    createdBy: number; // User ID of the creator
+    created_By: number; // User ID of the creator
 }

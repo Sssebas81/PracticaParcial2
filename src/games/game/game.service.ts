@@ -31,10 +31,7 @@ export class GameService {
         return game
     }
 
-    async update(id: number, dto: UpdateGameDto) {
-
-        //hago una copia para poder adaptar los datos antes de guardar
-        const updateData: any = { ...dto };
+    async update(id: number, updateGameDto: UpdateGameDto) {
 
         const game = await this.gameRepository.findOne({where: {id}})
 
@@ -42,21 +39,20 @@ export class GameService {
             throw new NotFoundException('Game not found')
         }
 
-        if (dto.createdBy) {
-        const user = await this.userService.findById(dto.createdBy);
+        const creator = await this.userService.findById(id);
 
-        if (!user) {
+        if (!creator) {
             throw new NotFoundException('User not found');
         }
-        
-        await this.gameRepository.update(id,updateData)
-        
-        return await this.gameRepository.findOneBy({id});
-        }
-  
+    
+        await this.gameRepository.update(id, updateGameDto)
+        return this.gameRepository.findOneBy({id});
+
     }
+
+
         async create(createGameDto: CreateGameDto) {
-            const user = await this.userService.findById(createGameDto.createdBy)
+            const user = await this.userService.findById(createGameDto.created_By)
 
             if (!user) {
                 throw new NotFoundException('User not found')
