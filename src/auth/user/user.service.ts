@@ -20,8 +20,8 @@ export class UserService {
         return this.userRepository.find();
     }
 
-    findById(id: number) {
-        const user = this.userRepository.findOneBy({ id });
+    async findById(id: number) {
+        const user = await this.userRepository.findOneBy({ id });
 
         if (!user) {
             throw new NotFoundException('User not found')
@@ -31,9 +31,31 @@ export class UserService {
     }
 
     async update(id: number, updateUserDto: UpdateUserDto) {
-        await this.userRepository.update(id, updateUserDto)
+        const user = await this.userRepository.findOne({ where: {id}})
 
-        return this.userRepository.findOneBy({id})
+        if (!user) {
+            throw new NotFoundException('User not found')
+        }
+
+        if (updateUserDto.roleName) {
+            const role = await this.roleService.findByName(updateUserDto.roleName)
+
+            if (!role) {
+                throw new NotFoundException('Role not found')
+            } 
+        }
+
+        if (updateUserDto.email) {
+            const exists = await this.userRepository.findOne({ where: { email: updateUserDto.email}})
+
+            if (exists) {
+                throw new BadRequestException('User with this email already exists')
+            }
+        }
+
+        Object.assign(user, updateUserDto)
+
+        return await this.userRepository.save(user)
     }
 
     async remove(id: number) {

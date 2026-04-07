@@ -18,8 +18,8 @@ export class RoleService {
         return this.roleRepository.find()
     }
 
-    findById(id: number) {
-        const role = this.roleRepository.findOneBy({id})
+    async findById(id: number) {
+        const role = await this.roleRepository.findOneBy({id})
 
         if (!role) {
             throw new NotFoundException('Role not found')
@@ -28,8 +28,23 @@ export class RoleService {
     }
 
     async update (id: number, updateRoleDto: UpdateRoleDto) {
-        await this.roleRepository.update(id, updateRoleDto) 
-        return this.roleRepository.findOneBy({id})
+        const role = await this.roleRepository.findOne({ where: {id} })
+
+        if (!role) {
+            throw new NotFoundException('Role not found')
+        }
+
+        if (updateRoleDto.name) {
+            const exists = await this.roleRepository.findOne({where: {name: updateRoleDto.name}})
+
+            if (exists) {
+                throw new BadRequestException('Role with this name already exists')
+            }
+        }
+
+        Object.assign(role, updateRoleDto)
+
+        return await this.roleRepository.save(role)
     }
 
     async remove (id: number) {
