@@ -66,7 +66,7 @@ export class UserService {
             throw new NotFoundException('User not found')
         }
 
-        await this.userRepository.delete(user)
+        await this.userRepository.delete(id)
 
         return {id}
     }
