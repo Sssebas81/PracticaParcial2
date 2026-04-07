@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
+import { ConfigService } from "@nestjs/config";
 
 import { User } from '../entities/user.entity';
 import { RoleService } from '../role/role.service';
@@ -14,21 +16,20 @@ export class UserService {
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
         private readonly roleService: RoleService,
+        private readonly configService: ConfigService,
+
     ) {}
 
     findAll() {
         return this.userRepository.find();
     }
 
-    async findById(id: number) {
-        const user = await this.userRepository.findOneBy({ id });
-
-        if (!user) {
-            throw new NotFoundException('User not found')
-        }
-
-        return user
-    }
+    findById(id: number, relations = false) {
+    return this.userRepository.findOne({
+      where: { id },
+      relations: relations ? ['role', 'role.rolePermissions', 'role.rolePermissions.permission'] : undefined,
+    });
+  }
 
     async update(id: number, updateUserDto: UpdateUserDto) {
         const user = await this.userRepository.findOne({ where: {id}})
@@ -85,8 +86,16 @@ export class UserService {
             throw new BadRequestException('User with this email already exists')
         }
 
+        if (!createUserDto.passwordHash) {
+        throw new BadRequestException('Password is required');
+    }
+
+    const saltRounds = parseInt(this.configService.get<string>('SALT_ROUNDS') ?? '10');
+    const passwordHash = await bcrypt.hash(createUserDto.passwordHash, saltRounds);
+
         const newUser = this.userRepository.create ({
             ...createUserDto,
+            passwordHash,
             role
         })
 
